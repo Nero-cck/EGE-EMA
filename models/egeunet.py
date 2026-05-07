@@ -258,8 +258,8 @@ class EGEUNet(nn.Module):
 
         # ===================== 🔥 在这里插入 EMA 注意力 🔥 =====================
         # 完全匹配通道：8、16、24、32、48
-        self.ema_skip1 = EMA(channels=8,  factor=2)   # 最浅层跳跃连接
-        self.ema_skip2 = EMA(channels=16, factor=4)   # 第二层跳跃连接
+        self.ema_fuse1 = EMA(channels=8,  factor=2)   # 最浅层融合后特征
+        self.ema_fuse2 = EMA(channels=16, factor=4)   # 第二层融合后特征
         #self.ema_skip3 = EMA(channels=24, factor=4)   # 第三层跳跃连接
         #self.ema_out  = EMA(channels=8,  factor=2)   # 最终输出前强化
 
@@ -336,10 +336,9 @@ class EGEUNet(nn.Module):
             t2 = self.GAB2(t3, t2, gt_pre2)
             gt_pre2 = F.interpolate(gt_pre2, scale_factor=4, mode ='bilinear', align_corners=True)
         else: t2 = self.GAB2(t3, t2)
-        #out2 = torch.add(out2, t2) # b, c1, H/4, W/4 
-        # 🔥 跳跃连接插入 EMA
-        t2 = self.ema_skip2(t2)
+        # 🔥 融合后特征插入 EMA
         out2 = torch.add(out2, t2)
+        out2 = self.ema_fuse2(out2)
         
         out1 = F.gelu(F.interpolate(self.dbn5(self.decoder5(out2)),scale_factor=(2,2),mode ='bilinear',align_corners=True)) # b, c0, H/2, W/2
         if self.gt_ds: 
@@ -347,10 +346,9 @@ class EGEUNet(nn.Module):
             t1 = self.GAB1(t2, t1, gt_pre1)
             gt_pre1 = F.interpolate(gt_pre1, scale_factor=2, mode ='bilinear', align_corners=True)
         else: t1 = self.GAB1(t2, t1)
-        #out1 = torch.add(out1, t1) # b, c0, H/2, W/2
-        # 🔥 跳跃连接插入 EMA
-        t1 = self.ema_skip1(t1)
+        # 🔥 融合后特征插入 EMA
         out1 = torch.add(out1, t1)
+        out1 = self.ema_fuse1(out1)
         
         # 🔥 最终输出前插入 EMA（最关键！）
         #out1 = self.ema_out(out1)
