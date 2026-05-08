@@ -348,7 +348,7 @@ class EGEUNet(nn.Module):
         else: t1 = self.GAB1(t2, t1)
         #out1 = torch.add(out1, t1) # b, c0, H/2, W/2
         # 🔥 跳跃连接插入 EMA
-        #t1 = self.ema_skip1(t1)
+        t1 = self.ema_skip1(t1)
         out1 = torch.add(out1, t1)
         
         # 🔥 最终输出前插入 EMA（最关键！）
