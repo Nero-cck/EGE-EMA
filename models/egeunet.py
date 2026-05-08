@@ -337,7 +337,7 @@ class EGEUNet(nn.Module):
         else: t2 = self.GAB2(t3, t2)
         #out2 = torch.add(out2, t2) # b, c1, H/4, W/4 
         # 🔥 跳跃连接插入 EMA
-        #t2 = self.ema_skip2(t2)
+        t2 = self.ema_skip2(t2)
         out2 = torch.add(out2, t2)
         
         out1 = F.gelu(F.interpolate(self.dbn5(self.decoder5(out2)),scale_factor=(2,2),mode ='bilinear',align_corners=True)) # b, c0, H/2, W/2
@@ -348,7 +348,7 @@ class EGEUNet(nn.Module):
         else: t1 = self.GAB1(t2, t1)
         #out1 = torch.add(out1, t1) # b, c0, H/2, W/2
         # 🔥 跳跃连接插入 EMA
-        t1 = self.ema_skip1(t1)
+        #t1 = self.ema_skip1(t1)
         out1 = torch.add(out1, t1)
         
         # 🔥 最终输出前插入 EMA（最关键！）
